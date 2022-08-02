@@ -56,8 +56,8 @@ class SSHProxy:
         self.command = b' '.join(self.sh.cmd).decode()
         log.debug(self.command)
 
-        left = int(timeout)
         if wait:
+            left = int(timeout)
             while not self.is_connected():
                 left -= 1
                 if left <= 0 or not self.sh.is_alive():
@@ -94,7 +94,7 @@ class SSHProxy:
             return False
 
         netstat = sp.run(['ss', '-ntlp'], stderr=sp.DEVNULL, stdout=sp.PIPE)
-        if not f' 127.0.0.1:{self.port} ' in netstat.stdout.decode():
+        if f' 127.0.0.1:{self.port} ' not in netstat.stdout.decode():
             log.debug(f'Waiting for {" ".join([x.decode() for x in self.sh.cmd])}')
             self.running = False
         else:
@@ -124,15 +124,8 @@ class IPTables:
 
     def __init__(self, proxies, address=None, port=None):
 
-        if address is None:
-            self.address = '127.0.0.1'
-        else:
-            self.address = str(address)
-        if port is None:
-            self.port = 1080
-        else:
-            self.port = int(port)
-
+        self.address = '127.0.0.1' if address is None else str(address)
+        self.port = 1080 if port is None else int(port)
         self.proxies = [p for p in proxies if p is not None]
         self.args_pre = []
         if os.geteuid() != 0:
@@ -150,10 +143,10 @@ class IPTables:
             if proxy is not None:
                 iptables_add = ['iptables', '-A']
                 iptables_main = ['OUTPUT', '-t', 'nat', '-d', f'{self.address}', '-o', 'lo', '-p', \
-                    'tcp', '--dport', f'{self.port}', '-j', 'DNAT', '--to-destination', f'127.0.0.1:{proxy.port}']
+                        'tcp', '--dport', f'{self.port}', '-j', 'DNAT', '--to-destination', f'127.0.0.1:{proxy.port}']
 
                 # if this isn't the last proxy
-                if not i == len(self.proxies)-1:
+                if i != len(self.proxies) - 1:
                     iptables_main += ['-m', 'statistic', '--mode', 'nth', '--every', f'{len(self.proxies)-i}', '--packet', '0']
 
                 self.iptables_rules.append(iptables_main)
@@ -181,13 +174,13 @@ class SSHLoadBalancer:
 
     def __init__(self, hosts, key=None, key_pass=None, base_port=33482, current_ip=False, socks_server=False):
 
-        self.args = dict()
+        self.args = {}
         self.hosts = hosts
         self.key = key
         self.key_pass = key_pass
         self.base_port = base_port
         self.current_ip = current_ip
-        self.proxies = dict()
+        self.proxies = {}
         self.socks_server = socks_server
 
         if self.key is not None:
@@ -213,7 +206,9 @@ class SSHLoadBalancer:
 
         # wait for them all to start
         left = int(timeout)
-        while not all([p.is_connected() for p in self.proxies.values() if p is not None]):
+        while not all(
+            p.is_connected() for p in self.proxies.values() if p is not None
+        ):
             left -= 1
             for p in self.proxies.values():
                 if p is not None and (not p.sh.is_alive() or left <= 0):

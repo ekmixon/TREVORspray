@@ -44,9 +44,9 @@ class DomainDiscovery:
 
         url = f'https://login.windows.net/{self.domain}/.well-known/openid-configuration'
         log.info(f'Checking OpenID configuration at {url}')
-        log.info(f'NOTE: You can spray against "token_endpoint" with --url!!')
+        log.info('NOTE: You can spray against "token_endpoint" with --url!!')
 
-        content = dict()
+        content = {}
         with suppress(Exception):
             content = requests.get(url).json()
 
@@ -58,7 +58,7 @@ class DomainDiscovery:
         url = f'https://login.microsoftonline.com/getuserrealm.srf?login=test@{self.domain}'
         log.info(f'Checking user realm at {url}')
 
-        content = dict()
+        content = {}
         with suppress(Exception):
             content = requests.get(url).json()
 
@@ -66,12 +66,11 @@ class DomainDiscovery:
 
 
     def mxrecords(self):
-        
+
         log.info(f'Checking MX records for {self.domain}')
         mx_records = []
         with suppress(Exception):
-            for x in dns.resolver.query(self.domain, 'MX'):
-                mx_records.append(x.to_text())
+            mx_records.extend(x.to_text() for x in dns.resolver.query(self.domain, 'MX'))
         return mx_records
 
 
@@ -80,7 +79,7 @@ class DomainDiscovery:
         url = f'https://outlook.office365.com/autodiscover/autodiscover.json/v1.0/test@{self.domain}?Protocol=Autodiscoverv1'
         log.info(f'Checking autodiscover info at {url}')
 
-        content = dict()
+        content = {}
         with suppress(Exception):
             content = requests.get(url).json()
 
@@ -112,6 +111,6 @@ class DomainDiscovery:
             for i in range(iterations):
                 suggestions.add(''.join(wn[i:i+length]))
 
-        suggestions = list(f'{s}.onmicrosoft.com' for s in suggestions)
+        suggestions = [f'{s}.onmicrosoft.com' for s in suggestions]
 
         return sorted(list(suggestions), key=lambda x: len(x))

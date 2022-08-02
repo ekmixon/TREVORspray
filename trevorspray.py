@@ -127,13 +127,12 @@ if __name__ == '__main__':
 
         options = parser.parse_args()
 
-        if not (options.emails and options.passwords):
-            if not options.recon:
-                log.error('Please specify --emails and --passwords')
-        else:
+        if options.emails and options.passwords:
             options.emails = util.files_to_list(options.emails)
 
 
+        elif not options.recon:
+            log.error('Please specify --emails and --passwords')
         if options.no_current_ip and not options.ssh:
             log.error('Cannot specify --no-current-ip without giving --ssh hosts')
             sys.exit(1)

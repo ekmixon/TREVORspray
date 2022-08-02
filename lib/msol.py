@@ -23,16 +23,12 @@ class MSOLSpray:
         self.force = force
         self.verbose = verbose
 
-        if skip_logins is None:
-            self.skip_logins = []
-        else:
-            self.skip_logins = skip_logins
+        self.skip_logins = [] if skip_logins is None else skip_logins
 
 
     def spray(self):
 
-        for i,email in enumerate(self.emails):
-
+        for email in self.emails:
             login_combo = f'{self.url}:{email}:{self.password}'
 
             if login_combo in self.skip_logins:
@@ -56,7 +52,7 @@ class MSOLSpray:
             }
 
             proxy = None
-            proxy_arg = dict()
+            proxy_arg = {}
             if self.load_balancer is not None:
                 proxy = next(self.load_balancer)
                 if proxy is not None:
